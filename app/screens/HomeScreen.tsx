@@ -24,7 +24,7 @@ import {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme, themeMode } = useTheme();
   const { entries, loading } = useTravelEntries();
 
   useEffect(() => {
@@ -60,9 +60,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           },
         ]}
       >
-        <Text style={[styles.appTitle, { color: theme.colors.text }]}>
-          WanderLog
-        </Text>
+        {/* Logo image based on theme */}
+        <Image
+          source={
+            themeMode === "dark"
+              ? require("../../assets/logo/snaplog-logo2.png")
+              : require("../../assets/logo/snaplog-logo1.png")
+          }
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <View style={styles.headerIcons}>
           <ThemeToggle />
         </View>
@@ -114,10 +121,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
-  appTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    fontStyle: "italic",
+  logoImage: {
+    height: 38,
+    width: 140,
   },
   headerIcons: {
     flexDirection: "row",

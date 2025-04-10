@@ -3,7 +3,9 @@ import React, { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -13,8 +15,12 @@ import ThemeToggle from "../components/ThemeToggle";
 import TravelEntryItem from "../components/TravelEntryItem";
 import { useTheme } from "../context/ThemeContext";
 import { useTravelEntries } from "../context/TravelEntryContext";
+import { TravelEntry } from "../types";
 import { HomeScreenProps } from "../types/navigation";
-import { setupNotifications } from "../utils/permissions";
+import {
+  requestNotificationPermission,
+  setupNotifications,
+} from "../utils/permissions";
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -23,10 +29,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     // Setup notifications when the app starts
-    setupNotifications();
+    const initNotifications = async () => {
+      await setupNotifications();
+      await requestNotificationPermission();
+    };
+
+    initNotifications();
   }, []);
 
-  const renderItem = ({ item }) => <TravelEntryItem entry={item} />;
+  const renderItem = ({ item }: { item: TravelEntry }) => (
+    <TravelEntryItem entry={item} />
+  );
 
   return (
     <View
@@ -34,13 +47,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         styles.container,
         {
           backgroundColor: theme.colors.background,
-          paddingTop: insets.top,
-          paddingBottom: insets.bottom,
         },
       ]}
     >
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
+      {/* App header */}
+      <View
+        style={[
+          styles.header,
+          {
+            borderBottomColor: theme.colors.border,
+            paddingTop: insets.top,
+          },
+        ]}
+      >
+        <Text style={[styles.appTitle, { color: theme.colors.text }]}>
+          WanderLog
+        </Text>
+        <View style={styles.headerIcons}>
           <ThemeToggle />
         </View>
       </View>
@@ -59,7 +82,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           contentContainerStyle={
             entries.length === 0 ? styles.emptyList : styles.list
           }
-          ListEmptyComponent={<EmptyState />}
+          ListEmptyComponent={
+            <EmptyState
+              message="Share your travel memories!"
+              icon="image-outline"
+            />
+          }
+          showsVerticalScrollIndicator={false}
         />
       )}
 
@@ -79,23 +108,24 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
   },
-  headerContent: {
+  appTitle: {
+    fontSize: 22,
+    fontWeight: "600",
+    fontStyle: "italic",
+  },
+  headerIcons: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginRight: 8,
+    gap: 16,
   },
   list: {
-    padding: 8,
+    paddingTop: 8,
   },
   emptyList: {
     flexGrow: 1,

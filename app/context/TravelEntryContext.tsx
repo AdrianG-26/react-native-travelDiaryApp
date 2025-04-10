@@ -60,14 +60,24 @@ export const TravelEntryProvider: React.FC<{ children: React.ReactNode }> = ({
     setEntries(updatedEntries);
     await saveEntries(updatedEntries);
 
-    // Send notification
-    await Notifications.scheduleNotificationAsync({
-      content: {
+    try {
+      // Ensure notification is triggered properly
+      const notificationContent = {
         title: "New Travel Entry Added!",
         body: `Your travel memory at ${newEntry.address} has been saved.`,
-      },
-      trigger: null, // Immediately
-    });
+        data: { entryId: newEntry.id },
+      };
+
+      // Send notification immediately
+      await Notifications.scheduleNotificationAsync({
+        content: notificationContent,
+        trigger: null, // null trigger means immediate delivery
+      });
+
+      console.log("Notification scheduled for new entry");
+    } catch (error) {
+      console.error("Failed to send notification:", error);
+    }
   };
 
   const removeEntry = async (id: string) => {

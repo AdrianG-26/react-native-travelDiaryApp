@@ -2,27 +2,31 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AppTheme, ThemeMode } from "../types";
 
+// Light theme with soft blues and creams
+// Palette from: https://colorhunt.co/palette/89a8b2b3c8cfe5e1daf1f0e8
 const lightTheme: AppTheme = {
   dark: false,
   colors: {
-    primary: "#6200ee",
-    background: "#f2f2f2",
-    card: "#ffffff",
-    text: "#333333",
-    border: "#e0e0e0",
-    notification: "#f50057",
+    primary: "#89A8B2", // Soft blue
+    background: "#F1F0E8", // Cream white
+    card: "#FFFFFF",
+    text: "#3A4A4D", // Dark blue-gray for text
+    border: "#B3C8CF", // Light blue
+    notification: "#DA7F7F", // Soft red for notifications
   },
 };
 
+// Dark theme with rich reds and deep blacks
+// Palette from: https://colorhunt.co/palette/0c0c0c481e149b3922f2613f
 const darkTheme: AppTheme = {
   dark: true,
   colors: {
-    primary: "#bb86fc",
-    background: "#121212",
-    card: "#1e1e1e",
-    text: "#ffffff",
-    border: "#2c2c2c",
-    notification: "#cf6679",
+    primary: "#F2613F", // Bright orange-red
+    background: "#0C0C0C", // Deep black
+    card: "#1E1E1E", // Slightly lighter black
+    text: "#F8F8F8", // Off-white text
+    border: "#481E14", // Dark brown
+    notification: "#9B3922", // Darker red for notifications
   },
 };
 

@@ -50,8 +50,8 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ size = 24 }) => {
   const trackBgColor = switchAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [
-      theme.dark ? "#481E14" : "#B3C8CF",
-      theme.dark ? "#9B3922" : "#89A8B2",
+      theme.dark ? "#522546" : "#FFD63A",
+      theme.dark ? "#88304E" : "#FFA955",
     ],
   });
 
@@ -66,7 +66,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ size = 24 }) => {
               styles.thumb,
               {
                 transform: [{ translateX: switchTranslateX }],
-                backgroundColor: isDark ? "#1E1E1E" : "#F1F0E8",
+                backgroundColor: isDark ? "#1A1A1A" : "#FFFFFF",
               },
             ]}
           >
@@ -74,7 +74,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ size = 24 }) => {
               <Ionicons
                 name={isDark ? "moon" : "sunny"}
                 size={size - 8}
-                color={isDark ? "#F2613F" : "#89A8B2"}
+                color={isDark ? "#CF2861" : "#F75A5A"}
               />
             </Animated.View>
           </Animated.View>

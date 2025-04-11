@@ -6,6 +6,7 @@ export interface TravelEntry {
   longitude: number;
   timestamp: number;
   description: string;
+  mood?: string | null;
 }
 
 export type ThemeMode = "light" | "dark";

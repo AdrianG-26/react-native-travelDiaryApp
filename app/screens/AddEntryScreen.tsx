@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Image,
   ScrollView,
   StyleSheet,
@@ -24,6 +25,29 @@ import {
   requestNotificationPermission,
 } from "../utils/permissions";
 
+// Array of mood options
+const MOOD_OPTIONS = [
+  { id: "happy", label: "Happy", emoji: "😊" },
+  { id: "sad", label: "Sad", emoji: "😢" },
+  { id: "exhausted", label: "Exhausted", emoji: "😫" },
+  { id: "tired", label: "Tired", emoji: "😴" },
+  { id: "surprised", label: "Surprised", emoji: "😲" },
+  { id: "crying", label: "Crying", emoji: "😭" },
+  { id: "disgusted", label: "Disgusted", emoji: "🤢" },
+  { id: "cool", label: "Cool", emoji: "😎" },
+  { id: "hot", label: "Hot", emoji: "🥵" },
+  { id: "adventurous", label: "Adventurous", emoji: "🧗" },
+  { id: "relaxed", label: "Relaxed", emoji: "😌" },
+  { id: "excited", label: "Excited", emoji: "🤩" },
+];
+
+// Define the type for mood options
+type MoodOption = {
+  id: string;
+  label: string;
+  emoji: string;
+};
+
 const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
@@ -35,6 +59,9 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [description, setDescription] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [imageHeight, setImageHeight] = useState<number | null>(null);
+  const [imageWidth, setImageWidth] = useState<number | null>(null);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
 
   useEffect(() => {
     // Request permissions when the screen is mounted
@@ -66,6 +93,9 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
       setLatitude(null);
       setLongitude(null);
       setDescription("");
+      setImageHeight(null);
+      setImageWidth(null);
+      setSelectedMood(null);
     };
   }, [navigation]);
 
@@ -74,6 +104,8 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
       const result = await takePicture();
       if (result) {
         setImageUri(result.uri);
+        setImageWidth(result.width);
+        setImageHeight(result.height);
         await getLocationAndAddress();
       }
     } catch (error) {
@@ -122,7 +154,21 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
         longitude,
         timestamp: Date.now(),
         description: description.trim(),
+        mood: selectedMood,
       });
+
+      // Schedule a notification
+      try {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "New Snap Added!",
+            body: `You've added a new snap at ${address}`,
+          },
+          trigger: null, // Show immediately
+        });
+      } catch (error) {
+        console.error("Failed to schedule notification:", error);
+      }
 
       navigation.goBack();
     } catch (error) {
@@ -133,6 +179,54 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
       );
     }
   };
+
+  // Determine if the save button should be disabled
+  const isSaveDisabled =
+    !imageUri ||
+    !address ||
+    latitude === null ||
+    longitude === null ||
+    isLoading;
+
+  // Calculate image container style based on image dimensions
+  const getImageContainerStyle = () => {
+    if (imageUri && imageWidth && imageHeight) {
+      // Use the actual aspect ratio of the cropped image
+      return {
+        aspectRatio: imageWidth / imageHeight,
+      };
+    }
+
+    // Default aspect ratio for the placeholder
+    return {
+      aspectRatio: 4 / 3,
+    };
+  };
+
+  // Render a single mood option
+  const renderMoodOption = ({ item }: { item: MoodOption }) => (
+    <TouchableOpacity
+      style={[
+        styles.moodOption,
+        selectedMood === item.id && {
+          backgroundColor: theme.colors.primary + "20",
+          borderColor: theme.colors.primary,
+        },
+      ]}
+      onPress={() => setSelectedMood(item.id)}
+    >
+      <Text style={styles.moodEmoji}>{item.emoji}</Text>
+      <Text
+        style={[
+          styles.moodLabel,
+          { color: theme.colors.text },
+          selectedMood === item.id && { color: theme.colors.primary },
+        ]}
+      >
+        {item.label}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View
@@ -156,16 +250,26 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
           <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          New Memory
+          New Snap
         </Text>
         <TouchableOpacity
           onPress={handleSave}
-          style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+          style={[
+            styles.saveButton,
+            {
+              backgroundColor: isSaveDisabled
+                ? theme.colors.border
+                : theme.colors.primary,
+            },
+            isSaveDisabled && styles.saveButtonDisabled,
+          ]}
+          disabled={isSaveDisabled}
         >
           <Text
             style={[
               styles.saveButtonText,
               { color: theme.dark ? "#F1F0E8" : "#FFFFFF" },
+              isSaveDisabled && { opacity: 0.5 },
             ]}
           >
             Save
@@ -184,6 +288,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
               borderColor: theme.colors.border,
               backgroundColor: theme.colors.card,
             },
+            getImageContainerStyle(),
           ]}
         >
           {imageUri ? (
@@ -221,7 +326,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
             >
               <View style={styles.addressHeader}>
                 <Ionicons
-                  name="location-outline"
+                  name="location"
                   size={16}
                   color={theme.colors.primary}
                 />
@@ -240,6 +345,30 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
 
         {imageUri && (
           <>
+            {/* Mood Selection */}
+            <View
+              style={[
+                styles.moodContainer,
+                { backgroundColor: theme.colors.card },
+              ]}
+            >
+              <View style={styles.moodHeader}>
+                <Text style={styles.moodHeaderEmoji}>😀</Text>
+                <Text style={[styles.moodTitle, { color: theme.colors.text }]}>
+                  How are you feeling?
+                </Text>
+              </View>
+
+              <FlatList
+                data={MOOD_OPTIONS}
+                renderItem={renderMoodOption}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.moodList}
+              />
+            </View>
+
             <View
               style={[
                 styles.descriptionContainer,
@@ -247,7 +376,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
               ]}
             >
               <TextInput
-                placeholder="Write a description about this travel memory..."
+                placeholder="Write a description about your snap!"
                 placeholderTextColor={`${theme.colors.text}80`}
                 multiline
                 style={[styles.descriptionInput, { color: theme.colors.text }]}
@@ -267,11 +396,7 @@ const AddEntryScreen: React.FC<AddEntryScreenProps> = ({ navigation }) => {
               ]}
               onPress={handleTakePicture}
             >
-              <Ionicons
-                name="camera-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
+              <Ionicons name="camera" size={20} color={theme.colors.primary} />
               <Text
                 style={[styles.retakeButtonText, { color: theme.colors.text }]}
               >
@@ -300,14 +425,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    paddingLeft: 40,
   },
   saveButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 8,
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveButtonText: {
-    color: "white",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -316,7 +444,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   imageContainer: {
-    aspectRatio: 1,
+    width: "100%",
     borderRadius: 12,
     overflow: "hidden",
     borderWidth: 1,
@@ -335,6 +463,11 @@ const styles = StyleSheet.create({
   addImageText: {
     marginTop: 8,
     fontSize: 16,
+  },
+  freeformHint: {
+    marginTop: 4,
+    fontSize: 12,
+    opacity: 0.7,
   },
   loadingContainer: {
     padding: 20,
@@ -362,6 +495,48 @@ const styles = StyleSheet.create({
   addressText: {
     fontSize: 16,
     lineHeight: 24,
+  },
+  // Mood selection styles
+  moodContainer: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  moodHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  moodHeaderEmoji: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  moodTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginLeft: 2,
+  },
+  moodList: {
+    paddingVertical: 8,
+  },
+  moodOption: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    marginRight: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "transparent",
+    minWidth: 80,
+  },
+  moodEmoji: {
+    fontSize: 30,
+    marginBottom: 6,
+  },
+  moodLabel: {
+    marginTop: 2,
+    fontSize: 12,
+    textAlign: "center",
   },
   descriptionContainer: {
     padding: 16,

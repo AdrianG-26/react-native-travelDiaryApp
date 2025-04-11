@@ -4,6 +4,7 @@ import {
   Dimensions,
   Image,
   Modal,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -23,6 +24,7 @@ const TravelEntryItem: React.FC<TravelEntryItemProps> = ({ entry }) => {
   const { theme } = useTheme();
   const { removeEntry } = useTravelEntries();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
 
   const formatDate = (timestamp: number) => {
     const now = new Date();
@@ -64,6 +66,38 @@ const TravelEntryItem: React.FC<TravelEntryItemProps> = ({ entry }) => {
     setShowDeleteModal(false);
   };
 
+  // Get the appropriate emoji for the mood
+  const getMoodEmoji = (mood: string) => {
+    switch (mood) {
+      case "happy":
+        return "😊";
+      case "sad":
+        return "😢";
+      case "exhausted":
+        return "😫";
+      case "tired":
+        return "😴";
+      case "surprised":
+        return "😲";
+      case "crying":
+        return "😭";
+      case "disgusted":
+        return "🤢";
+      case "cool":
+        return "😎";
+      case "hot":
+        return "🥵";
+      case "adventurous":
+        return "🧗";
+      case "relaxed":
+        return "😌";
+      case "excited":
+        return "🤩";
+      default:
+        return "😊";
+    }
+  };
+
   return (
     <View
       style={[
@@ -79,8 +113,8 @@ const TravelEntryItem: React.FC<TravelEntryItemProps> = ({ entry }) => {
       <View style={styles.header}>
         <View style={styles.locationContainer}>
           <Ionicons
-            name="location-outline"
-            size={16}
+            name="location"
+            size={20}
             color={theme.colors.primary}
             style={styles.locationIcon}
           />
@@ -93,30 +127,64 @@ const TravelEntryItem: React.FC<TravelEntryItemProps> = ({ entry }) => {
         </View>
         <TouchableOpacity onPress={handleRemove} style={styles.optionsButton}>
           <Ionicons
-            name="trash-outline"
-            size={20}
+            name="trash"
+            size={25}
             color={theme.colors.notification}
           />
         </TouchableOpacity>
       </View>
 
-      {/* Post Image */}
-      <Image
-        source={{ uri: entry.imageUri }}
-        style={styles.image}
-        resizeMode="cover"
-      />
+      {/* Post Image - Now square (1:1) with onPress to view full image */}
+      <TouchableOpacity onPress={() => setShowFullImage(true)}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: entry.imageUri }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <View style={styles.expandIcon}>
+            <Ionicons name="expand-outline" size={18} color="white" />
+          </View>
+        </View>
+      </TouchableOpacity>
 
       {/* Action Bar */}
       <View
         style={[
           styles.actionBar,
-          { borderBottomColor: theme.colors.border, borderBottomWidth: 1 },
+          {
+            borderBottomColor: theme.colors.border,
+            borderBottomWidth: 1,
+          },
         ]}
       >
-        <Text style={[styles.timestamp, { color: theme.colors.text }]}>
-          {formatDate(entry.timestamp)}
-        </Text>
+        <View style={styles.actionBarLeft}>
+          <Text style={[styles.timestamp, { color: theme.colors.text }]}>
+            {formatDate(entry.timestamp)}
+          </Text>
+        </View>
+
+        {/* Mood badge */}
+        {entry.mood && (
+          <View
+            style={[
+              styles.moodBadge,
+              {
+                backgroundColor: theme.colors.primary + "15",
+                borderColor: theme.colors.primary + "30",
+              },
+            ]}
+          >
+            <Text style={styles.moodBadgeEmoji}>
+              {getMoodEmoji(entry.mood)}
+            </Text>
+            <Text
+              style={[styles.moodBadgeText, { color: theme.colors.primary }]}
+            >
+              Feeling {entry.mood.charAt(0).toLowerCase() + entry.mood.slice(1)}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Description */}
@@ -127,6 +195,28 @@ const TravelEntryItem: React.FC<TravelEntryItemProps> = ({ entry }) => {
           </Text>
         </View>
       )}
+
+      {/* Full Image Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showFullImage}
+        onRequestClose={() => setShowFullImage(false)}
+      >
+        <View style={styles.fullImageModalOverlay}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowFullImage(false)}
+          >
+            <Ionicons name="close-circle" size={32} color="white" />
+          </TouchableOpacity>
+          <Image
+            source={{ uri: entry.imageUri }}
+            style={styles.fullImage}
+            resizeMode="contain"
+          />
+        </View>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -144,18 +234,17 @@ const TravelEntryItem: React.FC<TravelEntryItemProps> = ({ entry }) => {
           >
             <View style={styles.modalHeader}>
               <Ionicons
-                name="alert-circle-outline"
+                name="alert-circle"
                 size={32}
                 color={theme.colors.notification}
               />
               <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-                Delete Travel Memory
+                Delete Snap
               </Text>
             </View>
 
             <Text style={[styles.modalMessage, { color: theme.colors.text }]}>
-              Are you sure you want to delete this travel memory? This action
-              cannot be undone.
+              Are you sure you want to delete this snap? This action cannot be undone.
             </Text>
 
             <View style={styles.modalButtons}>
@@ -219,10 +308,23 @@ const styles = StyleSheet.create({
   optionsButton: {
     padding: 4,
   },
-  image: {
+  imageContainer: {
     width: "100%",
     height: width - 16,
+    position: "relative",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
     backgroundColor: "#EFEFEF",
+  },
+  expandIcon: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 12,
+    padding: 5,
   },
   actionBar: {
     flexDirection: "row",
@@ -231,9 +333,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
+  actionBarLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   timestamp: {
     fontSize: 12,
     opacity: 0.7,
+  },
+  moodBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  moodBadgeEmoji: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+  moodBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   captionContainer: {
     padding: 12,
@@ -243,6 +365,24 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  // Full Image Modal
+  fullImageModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullImage: {
+    width: width,
+    height: width * 1.5, // This allows taller images to be fully visible
+    maxHeight: "80%",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 10,
   },
   // Modal styles
   modalOverlay: {

@@ -16,6 +16,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 }) => {
   const { theme } = useTheme();
 
+  const accentColor = theme.dark ? "#CF2861" : "#F75A5A";
+
   return (
     <View style={styles.container}>
       <View
@@ -27,17 +29,13 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           },
         ]}
       >
-        <Ionicons
-          name={icon as any}
-          size={iconSize}
-          color={theme.colors.primary}
-        />
+        <Ionicons name={icon as any} size={iconSize} color={accentColor} />
       </View>
       <Text style={[styles.message, { color: theme.colors.text }]}>
         {message}
       </Text>
       <Text style={[styles.subMessage, { color: theme.colors.text }]}>
-        Tap the + button to add your travel memories
+        Tap the + button below to add a snap!
       </Text>
     </View>
   );

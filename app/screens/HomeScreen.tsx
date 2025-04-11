@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect } from "react";
 import {
   ActivityIndicator,
@@ -55,21 +56,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         style={[
           styles.header,
           {
-            borderBottomColor: theme.colors.border,
-            paddingTop: insets.top,
+            paddingTop: insets.top + 12,
           },
         ]}
       >
         {/* Logo image based on theme */}
-        <Image
-          source={
-            themeMode === "dark"
-              ? require("../../assets/logo/snaplog-logo2.png")
-              : require("../../assets/logo/snaplog-logo1.png")
-          }
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <View style={styles.logoContainer}>
+          <Image
+            source={
+              themeMode === "dark"
+                ? require("../../assets/logo/snaplog-logo2.png")
+                : require("../../assets/logo/snaplog-logo1.png")
+            }
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
         <View style={styles.headerIcons}>
           <ThemeToggle />
         </View>
@@ -91,8 +93,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           }
           ListEmptyComponent={
             <EmptyState
-              message="Share your travel memories!"
-              icon="image-outline"
+              message="Start snapping!"
+              icon="camera"
             />
           }
           showsVerticalScrollIndicator={false}
@@ -117,13 +119,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
+    paddingRight: 20,
+    paddingBottom: 16,
+    marginBottom: 8,
+  },
+  logoContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
   logoImage: {
-    height: 38,
-    width: 140,
+    height: 48,
+    width: 180,
   },
   headerIcons: {
     flexDirection: "row",
